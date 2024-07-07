@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 log="$(pwd)/installer_log"
 
 respuesta=$(whiptail --title "Instalador de apps" --menu "¿Qué desea hacer?" 20 80 6 \
