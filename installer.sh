@@ -1,45 +1,328 @@
 #!/bin/bash
 
-
-#VARIABLES GLOBALES================================
-log="$(pwd)/installer_log"
-flag="$(pwd)/stop_progress_bar"
-
-
+##########################################################################################
+# MENU PRINCIPAL
+##########################################################################################
 menu_principal(){
 
   while true ; do
 
-    respuesta=$(whiptail --title "Instalador de apps" --menu "¿Qué desea hacer?" 20 80 6 \
-        "1" "instalar node-red"    \
-        "2" "instalar grafana"     \
-        "3" "desinstalar node-red" \
-        "4" "desinstalar grafana"  \
-        "5" "salir"                \
+    respuesta=$(whiptail --title "((   MENU PRINCIPAL  ))" --menu "¿Qué desea hacer?" 20 80 6 \
+        "1" "Administrar usuarios"    \
+        "2" "Estado del PC"           \
+        "3" "Instalacion PSA"         \
+        "4" "Desinstalacion PSA"      \
+        "5" "Salir"                   \
      3>&1 1>&2 2>&3)
 
 
     if [ $? == 0 ]; then
       case $respuesta in
 
-        "1") instalar_node_red ;;
+        "1") administracion_usuarios ;;
 
-        "2") instalar_grafana ;;
+        "2") estado_del_pc ;;
 
-        "3") desinstalar_node_red ;;
+        "3") instalacion_psa ;;
 
-        "4") desinstalar_grafana ;;
+        "4") desinstalacion_psa ;;
 
           *) break ;;
       esac
+
+    else
+      break;
     fi
   done
-
-  clear
 }
 
 
 
+
+
+
+
+
+
+##########################################################################################
+# ADMINISTRACION DE USUARIOS
+##########################################################################################
+administracion_usuarios(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "ADMINISTRACION DE USUARIOS" --menu "Opciones" 20 80 6 \
+        "1" "Crear usuarios"      \
+        "2" "Borrar usuarios"     \
+        "3" "Regresar"            \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") crear_usuarios ;;
+
+        "2") borrar_usuarios ;;
+
+        "3") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+# CREAR DE USUARIOS =================================
+crear_usuarios(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "ADMINISTRACION DE USUARIOS => (( CREAR ))" --menu "Opciones" 20 80 6 \
+        "1" "Mediante archivo"   \
+        "2" "Manual"             \
+        "3" "Regresar"           \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") crear_usuarios_archivo ;;
+
+        "2") crear_usuarios_manual ;;
+
+        "3") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+
+# BORRAR DE USUARIOS =================================
+crear_usuarios(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "ADMINISTRACION DE USUARIOS => (( BORRAR ))" --menu "Opciones" 20 80 6 \
+        "1" "Mediante archivo"   \
+        "2" "Manual"             \
+        "3" "Regresar"           \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") borrar_usuarios_archivo ;;
+
+        "2") borrar_usuarios_manual ;;
+
+        "3") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+
+
+
+##########################################################################################
+# ESTADO DEL PC
+##########################################################################################
+estado_del_pc(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "ESTADO DEL PC" --menu "Opciones" 20 80 6 \
+        "1" "Mostrar estado"   \
+        "2" "Regresar"         \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") mostrar_estado ;;
+
+        "2") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################################################################
+# INSTALACION PSA
+##########################################################################################
+instalacion_psa(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "INSTALACION PSA" --menu "Opciones" 20 80 6 \
+        "1" "Instalar Grafana"    \
+        "2" "Instalar Node-Red"   \
+        "3" "Regresar"            \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") instalar_grafana ;;
+
+        "2") instalar_node_red ;;
+
+        "3") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+instalar_grafana(){
+  dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
+  && firewall-cmd --add-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && systemctl enable grafana-server >/dev/null 2>&1 \
+  && systemctl daemon-reload \
+  && systemctl start grafana-server \
+  && touch $flag \
+  &
+  barra_progreso "Instalando grafana, por favor espere..."
+  proceso_finalizado "Instalacion de grafana completada"
+}
+
+
+
+instalar_node_red(){
+  npm install -g --unsafe-perm node-red >/dev/null 2>$log \
+  && firewall-cmd --add-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "Instalando node-red, por favor espere..."
+  proceso_finalizado "Instalacion node-red completada"
+}
+
+
+
+
+
+
+
+
+##########################################################################################
+# DESINSTALACION PSA
+##########################################################################################
+desinstalacion_psa(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "DESINSTALACION PSA" --menu "Opciones" 20 80 6 \
+        "1" "Desinstalar Grafana"    \
+        "2" "Desinstalar Node-Red"   \
+        "3" "Regresar"               \
+     3>&1 1>&2 2>&3)
+
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") desinstalar_grafana ;;
+
+        "2") desinstalar_node_red ;;
+
+        "3") break ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+desinstalar_grafana(){
+  systemctl stop grafana-server >/dev/null 2>&1 \
+  && dnf remove grafana-enterprise -y >/dev/null 2>$log \
+  && firewall-cmd --remove-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "Desinstalando grafana, por favor espere..."
+  proceso_finalizado "Desinstalacion de grafana completada"
+}
+
+
+
+desinstalar_node_red(){
+  npm uninstall -g node-red >/dev/null 2>$log \
+  && firewall-cmd --remove-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "desinstalando node-red, por favor espere..."
+  proceso_finalizado "Desinstalacion de node-red completada"
+}
+
+
+
+
+
+
+
+##########################################################################################
+# UTILIDADES DEL SCRIPT
+##########################################################################################
+
+# VARIABLES GLOBALES ======================================
+log="$(pwd)/installer_log"
+flag="$(pwd)/stop_progress_bar"
+
+
+
+# BARRA DE PROGRESO =======================================
 barra_progreso(){
   {
     for (( i=10; i<=100; i++ )) ; do
@@ -55,7 +338,7 @@ barra_progreso(){
   rm -f $flag
 }
 
-
+# MENSAJE DE FINALIZACION DE PROCESO ======================
 proceso_finalizado(){
   msj=$1
 
@@ -74,34 +357,8 @@ proceso_finalizado(){
 
 
 
-instalar_node_red(){
-  npm install -g --unsafe-perm node-red >/dev/null 2>$log && touch $flag &
-  barra_progreso "Instalando node-red, por favor espere..."
-  proceso_finalizado "Instalacion node-red completada"
-}
 
-desinstalar_node_red(){
-  npm uninstall -g node-red >/dev/null 2>$log && touch $flag &
-  barra_progreso "desinstalando node-red, por favor espere"
-  proceso_finalizado "Desinstalacion de node-red completada"
-}
-
-
-
-
-
-instalar_grafana(){
-  dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log && touch $flag &
-  barra_progreso "Instalando grafana, por favor espere..."
-  proceso_finalizado "Instalacion de grafana completada"
-}
-
-desinstalar_grafana(){
-  dnf remove grafana -y >/dev/null 2>$log && touch $flag &
-  barra_progreso "Desinstalando grafana, por favor espere..."
-  proceso_finalizado "Desinstalacion de grafana completada"
-}
-
-
-
+##########################################################################################
+# INICIALIZADOR DEL SCRIPT
+##########################################################################################
 menu_principal
