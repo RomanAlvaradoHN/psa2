@@ -13,9 +13,9 @@ menu_principal(){
         "3" "Instalacion PSA"         \
         "4" "Desinstalacion PSA"      \
         "5" "Salir"                   \
-     3>&1 1>&2 2>&3)
-
-
+      3>&1 1>&2 2>&3
+    )
+    
     if [ $? == 0 ]; then
       case $respuesta in
 
@@ -55,7 +55,8 @@ administracion_usuarios(){
         "1" "Crear usuarios"      \
         "2" "Borrar usuarios"     \
         "3" "Regresar"            \
-     3>&1 1>&2 2>&3)
+      3>&1 1>&2 2>&3
+    )
 
 
     if [ $? == 0 ]; then
@@ -86,7 +87,8 @@ crear_usuarios(){
         "1" "Mediante archivo"   \
         "2" "Manual"             \
         "3" "Regresar"           \
-     3>&1 1>&2 2>&3)
+      3>&1 1>&2 2>&3
+    )
 
 
     if [ $? == 0 ]; then
@@ -110,7 +112,7 @@ crear_usuarios(){
 
 
 # BORRAR DE USUARIOS =================================
-crear_usuarios(){
+borrar_usuarios(){
 
   while true ; do
 
@@ -118,13 +120,14 @@ crear_usuarios(){
         "1" "Mediante archivo"   \
         "2" "Manual"             \
         "3" "Regresar"           \
-     3>&1 1>&2 2>&3)
+      3>&1 1>&2 2>&3
+    )
 
 
     if [ $? == 0 ]; then
       case $respuesta in
 
-        "1") borrar_usuarios_archivo ;;
+        "1") borrar_usuarios_archivo  -d ;;
 
         "2") borrar_usuarios_manual ;;
 
@@ -138,6 +141,62 @@ crear_usuarios(){
     fi
   done
 }
+
+
+crear_usuarios_manual(){
+  u=$(whiptail --title "Crear usuario manual" --inputbox "Nombre de usuario:" 10 60 3>&1 1>&2 2>&3)
+
+  p=$(whiptail --title "Crear usuario manual" --passwordbox "Contrasenia:" 10 60 3>&1 1>&2 2>&3)
+  c=$(whiptail --title "Crear usuario manual" --passwordbox "Confirme contrasenia:" 10 60 3>&1 1>&2 2>&3)
+
+  if [ "$p" = "$c" ]; then
+    useradd $u -p $(openssl passwd -1 $p) >/dev/null 2>&1
+    whiptail --title "Crear usuario manual" --msgbox "Usuario $u creado." 8 78
+  else
+    $(whiptail --title "Atencion" --msgbox "Las contrasenias no coinciden" 8 78 )
+    crear_usuarios_manual
+  fi
+}
+
+borrar_usuarios_manual(){
+  u=$(whiptail --title "Borrar usuario manual" --inputbox "Nombre de usuario:" 10 60 3>&1 1>&2 2>&3)
+  if [ $? == 0 ]; then
+    userdel -f -r $u >/dev/null 2>&1
+    whiptail --title "Borrar usuario manual" --msgbox "Usuario $u borrado." 8 78
+  fi
+}
+
+
+crear_usuarios_archivo(){
+  usuarios_admin -c && touch $flag &
+  barra_progreso "Creando usuarios, por favor espere..."
+  proceso_finalizado "Usuarios creados!"
+}
+
+borrar_usuarios_archivo(){
+  usuarios_admin -d && touch $flag &
+  barra_progreso "Borrando usuarios, por favor espere..."
+  proceso_finalizado "Usuarios borrados!"
+}
+
+usuarios_admin(){
+  declare -a USUARIOS
+  USUARIOS=($(cat $archivo))
+
+  for i in ${USUARIOS[@]}; do
+    if [ $1 = "-c" ]; then
+      useradd $i -p $(openssl passwd -1 $i) >/dev/null 2>&1
+    elif [ $1 = "-d" ]; then
+      userdel -f -r $i >/dev/null 2>&1
+    else
+      clear
+    fi
+  done
+}
+
+
+
+
 
 
 
@@ -319,7 +378,7 @@ desinstalar_node_red(){
 # VARIABLES GLOBALES ======================================
 log="$(pwd)/installer_log"
 flag="$(pwd)/stop_progress_bar"
-
+archivo="$HOME/psafiles/usuarios"
 
 
 # BARRA DE PROGRESO =======================================
@@ -334,7 +393,7 @@ barra_progreso(){
       sleep 10
     done
     sleep 3
-  } | whiptail --gauge "${1}..." 6 80 0
+  } | whiptail --gauge "${1}" 6 80 0
   rm -f $flag
 }
 
