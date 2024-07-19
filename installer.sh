@@ -162,7 +162,7 @@ crear_usuarios_manual(){
     useradd $u -p $(openssl passwd -1 $p) >/dev/null 2>&1
     whiptail --title "Crear usuario manual" --msgbox "Usuario $u creado." 8 78
   else
-    $(whiptail --title "Atencion" --msgbox "Las contrasenias no coinciden" 8 78 )
+    whiptail --title "Atencion" --msgbox "Las contrasenias no coinciden" 8 78
     crear_usuarios_manual
   fi
 }
