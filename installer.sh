@@ -8,26 +8,28 @@ menu_principal(){
   while true ; do
 
     respuesta=$(whiptail --title "((   MENU PRINCIPAL  ))" --menu "¿Qué desea hacer?" 20 80 6 \
-        "1" "Administrar usuarios"    \
-        "2" "Estado del PC"           \
-        "3" "Instalacion PSA"         \
-        "4" "Desinstalacion PSA"      \
-        "5" "Salir"                   \
+        "1" "Administrar usuarios" \
+        "2" "Estado del PC"        \
+        "3" "Instalacion PSA"      \
+        "4" "Desinstalacion PSA"   \
+        "5" "Salir"                \
       3>&1 1>&2 2>&3
     )
     
     if [ $? == 0 ]; then
       case $respuesta in
 
-        "1") administracion_usuarios ;;
+        "1") menu_administracion_usuarios ;;
 
-        "2") estado_del_pc ;;
+        "2") menu_estado_del_pc ;;
 
-        "3") instalacion_psa ;;
+        "3") menu_instalacion_psa ;;
 
-        "4") desinstalacion_psa ;;
+        "4") menu_desinstalacion_psa ;;
 
-          *) break ;;
+        "5") break ;;
+
+          *) continue ;;
       esac
 
     else
@@ -47,7 +49,10 @@ menu_principal(){
 ##########################################################################################
 # ADMINISTRACION DE USUARIOS
 ##########################################################################################
-administracion_usuarios(){
+
+#=========================================================
+# MENUS Y OPCIONES =======================================
+menu_administracion_usuarios(){
 
   while true ; do
 
@@ -62,9 +67,9 @@ administracion_usuarios(){
     if [ $? == 0 ]; then
       case $respuesta in
 
-        "1") crear_usuarios ;;
+        "1") menu_crear_usuarios ;;
 
-        "2") borrar_usuarios ;;
+        "2") menu_borrar_usuarios ;;
 
         "3") break ;;
 
@@ -77,9 +82,7 @@ administracion_usuarios(){
   done
 }
 
-
-# CREAR DE USUARIOS =================================
-crear_usuarios(){
+menu_crear_usuarios(){
 
   while true ; do
 
@@ -109,10 +112,7 @@ crear_usuarios(){
   done
 }
 
-
-
-# BORRAR DE USUARIOS =================================
-borrar_usuarios(){
+menu_borrar_usuarios(){
 
   while true ; do
 
@@ -127,7 +127,7 @@ borrar_usuarios(){
     if [ $? == 0 ]; then
       case $respuesta in
 
-        "1") borrar_usuarios_archivo  -d ;;
+        "1") borrar_usuarios_archivo ;;
 
         "2") borrar_usuarios_manual ;;
 
@@ -142,6 +142,15 @@ borrar_usuarios(){
   done
 }
 
+
+
+#=========================================================
+# PROCESOS Y FUNCIONES ===================================
+crear_usuarios_archivo(){
+  usuarios_admin -c && touch $flag &
+  barra_progreso "Creando usuarios, por favor espere..."
+  proceso_finalizado "Usuarios creados!"
+}
 
 crear_usuarios_manual(){
   u=$(whiptail --title "Crear usuario manual" --inputbox "Nombre de usuario:" 10 60 3>&1 1>&2 2>&3)
@@ -158,6 +167,13 @@ crear_usuarios_manual(){
   fi
 }
 
+
+borrar_usuarios_archivo(){
+  usuarios_admin -d && touch $flag &
+  barra_progreso "Borrando usuarios, por favor espere..."
+  proceso_finalizado "Usuarios borrados!"
+}
+
 borrar_usuarios_manual(){
   u=$(whiptail --title "Borrar usuario manual" --inputbox "Nombre de usuario:" 10 60 3>&1 1>&2 2>&3)
   if [ $? == 0 ]; then
@@ -166,18 +182,6 @@ borrar_usuarios_manual(){
   fi
 }
 
-
-crear_usuarios_archivo(){
-  usuarios_admin -c && touch $flag &
-  barra_progreso "Creando usuarios, por favor espere..."
-  proceso_finalizado "Usuarios creados!"
-}
-
-borrar_usuarios_archivo(){
-  usuarios_admin -d && touch $flag &
-  barra_progreso "Borrando usuarios, por favor espere..."
-  proceso_finalizado "Usuarios borrados!"
-}
 
 usuarios_admin(){
   declare -a USUARIOS
@@ -205,7 +209,10 @@ usuarios_admin(){
 ##########################################################################################
 # ESTADO DEL PC
 ##########################################################################################
-estado_del_pc(){
+
+#=========================================================
+# MENUS Y OPCIONES =======================================
+menu_estado_del_pc(){
 
   while true ; do
 
@@ -252,6 +259,9 @@ estado_del_pc(){
 ##########################################################################################
 # INSTALACION PSA
 ##########################################################################################
+
+#=========================================================
+# MENUS Y OPCIONES =======================================
 instalacion_psa(){
 
   while true ; do
@@ -282,6 +292,9 @@ instalacion_psa(){
 }
 
 
+
+#=========================================================
+# PROCESOS Y FUNCIONES ===================================
 instalar_grafana(){
   dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
   && firewall-cmd --add-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
@@ -293,8 +306,6 @@ instalar_grafana(){
   barra_progreso "Instalando grafana, por favor espere..."
   proceso_finalizado "Instalacion de grafana completada"
 }
-
-
 
 instalar_node_red(){
   npm install -g --unsafe-perm node-red >/dev/null 2>$log \
@@ -315,6 +326,9 @@ instalar_node_red(){
 ##########################################################################################
 # DESINSTALACION PSA
 ##########################################################################################
+
+#=========================================================
+# MENUS Y OPCIONES =======================================
 desinstalacion_psa(){
 
   while true ; do
@@ -344,6 +358,9 @@ desinstalacion_psa(){
   done
 }
 
+
+#=========================================================
+# PROCESOS Y FUNCIONES ===================================
 desinstalar_grafana(){
   systemctl stop grafana-server >/dev/null 2>&1 \
   && dnf remove grafana-enterprise -y >/dev/null 2>$log \
@@ -353,8 +370,6 @@ desinstalar_grafana(){
   barra_progreso "Desinstalando grafana, por favor espere..."
   proceso_finalizado "Desinstalacion de grafana completada"
 }
-
-
 
 desinstalar_node_red(){
   npm uninstall -g node-red >/dev/null 2>$log \
@@ -375,13 +390,15 @@ desinstalar_node_red(){
 # UTILIDADES DEL SCRIPT
 ##########################################################################################
 
-# VARIABLES GLOBALES ======================================
+#=========================================================
+# VARIABLES GLOBALES =====================================
 log="$(pwd)/installer_log"
 flag="$(pwd)/stop_progress_bar"
 archivo="$HOME/psafiles/usuarios"
 
 
-# BARRA DE PROGRESO =======================================
+#=========================================================
+# BARRA DE PROGRESO ======================================
 barra_progreso(){
   {
     for (( i=10; i<=100; i++ )) ; do
@@ -397,7 +414,9 @@ barra_progreso(){
   rm -f $flag
 }
 
-# MENSAJE DE FINALIZACION DE PROCESO ======================
+
+#=========================================================
+# FINALIZACION DE PROCESO ================================
 proceso_finalizado(){
   msj=$1
 
