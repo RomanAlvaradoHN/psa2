@@ -185,7 +185,7 @@ borrar_usuarios_manual(){
 
 usuarios_admin(){
   declare -a USUARIOS
-  USUARIOS=($(cat $archivo))
+  USUARIOS=($(cat $usuarios))
 
   for i in ${USUARIOS[@]}; do
     if [ $1 = "-c" ]; then
@@ -239,7 +239,27 @@ menu_estado_del_pc(){
 }
 
 
+#=========================================================
+# PROCESOS Y FUNCIONES ===================================
+mostrar_estado(){
+  header="FECHA_Y_HORA, UPTIME, CPU, ESPACIO_LIBRE"
 
+  fecha_hora=$(date +"%d-%m-%Y %H:%M:%S")
+  uptime=$(uptime -p)
+  cpu=$(top -b -n 1 -d 1 | grep "Cpu(s)" | awk '{print $2}')%
+  disco_libre=$(df -hP / | awk 'NR==2 {print $4}')
+  
+  record="$fecha_hora, $uptime, $cpu, $disco_libre"
+
+  if [ ! -f $logs ]; then
+    echo $header > $logs &
+  fi
+
+  echo $record >> $logs &
+  
+  
+  whiptail --title "Estados del PC => (( Logs ))" --scrolltext --textbox $logs 20 80
+}
 
 
 
@@ -394,7 +414,8 @@ desinstalar_node_red(){
 # VARIABLES GLOBALES =====================================
 log="$(pwd)/installer_log"
 flag="$(pwd)/stop_progress_bar"
-archivo="$HOME/psafiles/usuarios"
+usuarios="$HOME/psafiles/usuarios"
+logs="$HOME/psafiles/logs"
 
 
 #=========================================================
