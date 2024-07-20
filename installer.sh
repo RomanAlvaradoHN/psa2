@@ -282,7 +282,7 @@ mostrar_estado(){
 
 #=========================================================
 # MENUS Y OPCIONES =======================================
-instalacion_psa(){
+menu_instalacion_psa(){
 
   while true ; do
 
@@ -349,7 +349,7 @@ instalar_node_red(){
 
 #=========================================================
 # MENUS Y OPCIONES =======================================
-desinstalacion_psa(){
+menu_desinstalacion_psa(){
 
   while true ; do
 
