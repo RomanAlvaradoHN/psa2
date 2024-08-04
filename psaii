@@ -42,15 +42,15 @@ menu_principal(){
 # INSTALACION PSA
 ##########################################################################################
 instalacion_psa(){
-  #instalar_grafana
-  #instalar_node_red
+  instalar_grafana
+  instalar_node_red
   instalar_mariadb
   proceso_finalizado "Instalacion de servidores completada"
 }
 
 instalar_grafana(){
   dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
-  && firewall-cmd --add-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && firewall_port_manager -a 3000/tcp \
   && systemctl enable grafana-server >/dev/null 2>&1 \
   && systemctl daemon-reload \
   && systemctl start grafana-server \
@@ -62,7 +62,7 @@ instalar_grafana(){
 
 instalar_node_red(){
   npm install -g --unsafe-perm node-red >/dev/null 2>$log \
-  && firewall-cmd --add-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && firewall_port_manager -a 1880/tcp \
   && touch $flag \
   &
   barra_progreso "Instalando node-red, por favor espere..."
@@ -71,7 +71,7 @@ instalar_node_red(){
 
 instalar_mariadb(){
   dnf install -y MariaDB-server >/dev/null 2>$log \
-  && firewall-cmd --add-port=3306/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && firewall_port_manager -a 3306/tcp \
   && systemctl enable mariadb.service >/dev/null 2>&1 \
   && systemctl start mariadb.service \
   && touch $flag \
@@ -88,8 +88,8 @@ instalar_mariadb(){
 # DESINSTALACION PSA
 ##########################################################################################
 desinstalacion_psa(){
-  #desinstalar_grafana
-  #desinstalar_node_red
+  desinstalar_grafana
+  desinstalar_node_red
   desinstalar_mariadb
   proceso_finalizado "Desinstalacion de servidores completada"
 }
@@ -98,7 +98,7 @@ desinstalacion_psa(){
 desinstalar_grafana(){
   systemctl stop grafana-server >/dev/null 2>&1 \
   && dnf remove grafana-enterprise -y >/dev/null 2>$log \
-  && firewall-cmd --remove-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && firewall_port_manager -r 3000/tcp \
   && touch $flag \
   &
   barra_progreso "Desinstalando grafana, por favor espere..."
@@ -107,7 +107,7 @@ desinstalar_grafana(){
 
 desinstalar_node_red(){
     npm uninstall -g node-red >/dev/null 2>$log \
-    && firewall-cmd --remove-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+    && firewall_port_manager -r 1880/tcp \
     && touch $flag \
     &
     barra_progreso "desinstalando node-red, por favor espere..."
@@ -115,10 +115,10 @@ desinstalar_node_red(){
 }
 
 desinstalar_mariadb(){
-  systemctl stop mariadb.service >/dev/null 2>&1 \
-  && dnf remove -y mariadb >/dev/null 2>$log \
-  && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql >/dev/null 2>&1 \
-  && firewall-cmd --remove-port=3306/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  systemctl stop mariadb.service >/dev/null 2>&1  \
+  ;  dnf remove -y mariadb >/dev/null 2>&1        \
+  && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql \
+  && firewall_port_manager -r 3306/tcp \
   && touch $flag \
   &
   barra_progreso "desinstalando MariaDB, por favor espere..."
@@ -177,6 +177,17 @@ proceso_finalizado(){
 }
 
 
+#=========================================================
+# FIREWALL ADD/REMOVE PORT ===============================
+firewall_port_manager(){
+  case $1 in
+    "-a") firewall-cmd --add-port=$2 --permanent >/dev/null 2>&1 ;;
+
+    "-r") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>&1 ;;
+  esac
+
+  firewall-cmd --reload >/dev/null 2>&1
+}
 
 
 
