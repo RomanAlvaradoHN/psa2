@@ -1,0 +1,188 @@
+#!/bin/bash
+
+##########################################################################################
+# MENU PRINCIPAL
+##########################################################################################
+menu_principal(){
+
+  while true ; do
+
+    respuesta=$(whiptail --title "((   MENU PRINCIPAL  ))" --menu "¿Qué desea hacer?" 20 80 6 \
+        "1" "Instalacion PSA"      \
+        "2" "Desinstalacion PSA"   \
+        "3" "Salir"                \
+      3>&1 1>&2 2>&3
+    )
+
+    if [ $? == 0 ]; then
+      case $respuesta in
+
+        "1") instalacion_psa ;;
+
+        "2") desinstalacion_psa ;;
+
+        "3") exit 0 ;;
+
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+
+
+
+
+
+##########################################################################################
+# INSTALACION PSA
+##########################################################################################
+instalacion_psa(){
+  #instalar_grafana
+  #instalar_node_red
+  instalar_mariadb
+  proceso_finalizado "Instalacion de servidores completada"
+}
+
+instalar_grafana(){
+  dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
+  && firewall-cmd --add-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && systemctl enable grafana-server >/dev/null 2>&1 \
+  && systemctl daemon-reload \
+  && systemctl start grafana-server \
+  && touch $flag \
+  &
+  barra_progreso "Instalando grafana, por favor espere..."
+  #proceso_finalizado "Instalacion de grafana completada"
+}
+
+instalar_node_red(){
+  npm install -g --unsafe-perm node-red >/dev/null 2>$log \
+  && firewall-cmd --add-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "Instalando node-red, por favor espere..."
+  #proceso_finalizado "Instalacion de node-red completada"
+}
+
+instalar_mariadb(){
+  dnf install -y MariaDB-server >/dev/null 2>$log \
+  && firewall-cmd --add-port=3306/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && systemctl enable mariadb.service >/dev/null 2>&1 \
+  && systemctl start mariadb.service \
+  && touch $flag \
+  &
+  barra_progreso "Instalando MariaDB, por favor espere..."
+  #proceso_finalizado "Instalacion de mysql completada"
+}
+
+
+
+
+
+##########################################################################################
+# DESINSTALACION PSA
+##########################################################################################
+desinstalacion_psa(){
+  #desinstalar_grafana
+  #desinstalar_node_red
+  desinstalar_mariadb
+  proceso_finalizado "Desinstalacion de servidores completada"
+}
+
+
+desinstalar_grafana(){
+  systemctl stop grafana-server >/dev/null 2>&1 \
+  && dnf remove grafana-enterprise -y >/dev/null 2>$log \
+  && firewall-cmd --remove-port=3000/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "Desinstalando grafana, por favor espere..."
+  #proceso_finalizado "Desinstalacion de grafana completada"
+}
+
+desinstalar_node_red(){
+    npm uninstall -g node-red >/dev/null 2>$log \
+    && firewall-cmd --remove-port=1880/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+    && touch $flag \
+    &
+    barra_progreso "desinstalando node-red, por favor espere..."
+    #proceso_finalizado "Desinstalacion de node-red completada"
+}
+
+desinstalar_mariadb(){
+  systemctl stop mariadb.service >/dev/null 2>&1 \
+  && dnf remove -y mariadb >/dev/null 2>$log \
+  && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql >/dev/null 2>&1 \
+  && firewall-cmd --remove-port=3306/tcp --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null \
+  && touch $flag \
+  &
+  barra_progreso "desinstalando MariaDB, por favor espere..."
+  #proceso_finalizado "Desinstalacion de mysql completada"
+}
+
+
+
+
+
+
+
+
+
+
+##########################################################################################
+# UTILIDADES DEL SCRIPT
+##########################################################################################
+
+#=========================================================
+# VARIABLES GLOBALES =====================================
+log="$(pwd)/installer_log"
+flag="$(pwd)/stop_progress_bar"
+
+
+#=========================================================
+# BARRA DE PROGRESO ======================================
+barra_progreso(){
+  {
+    for (( i=10; i<=100; i++ )) ; do
+      echo $i
+      if [ -e $flag ] ; then
+        echo 100
+        break;
+      fi
+      sleep 10
+    done
+    sleep 3
+  } | whiptail --gauge "${1}" 6 80 0
+  rm -f $flag
+}
+
+
+#=========================================================
+# FINALIZACION DE PROCESO ================================
+proceso_finalizado(){
+  msj=$1
+
+  if [ -s $log ] ; then
+    msj="Algo salio mal, revise el archivo: ${log}"
+  else
+    rm -f $log
+  fi
+
+  whiptail --title "proceso finalizado" --msgbox "$msj" 10 80
+}
+
+
+
+
+
+
+
+##########################################################################################
+# INICIALIZADOR DEL SCRIPT
+##########################################################################################
+menu_principal
