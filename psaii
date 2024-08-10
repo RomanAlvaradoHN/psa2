@@ -38,47 +38,118 @@ menu_principal(){
 
 
 
+
 ##########################################################################################
 # INSTALACION PSA
 ##########################################################################################
-instalacion_psa(){
-  instalar_grafana
-  instalar_node_red
-  instalar_mariadb
-  proceso_finalizado "Instalacion de servidores completada"
-}
+  instalacion_psa(){
+    instalar_grafana
+    instalar_nodejs
+    instalar_node_red
+    instalar_mariadb
+    instalar_nginx
+    instalar_phpmyadmin
+    proceso_finalizado "Instalacion de servidores completada"
+  }
 
-instalar_grafana(){
-  dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
-  && firewall_port_manager -a 3000/tcp \
-  && systemctl enable grafana-server >/dev/null 2>&1 \
-  && systemctl daemon-reload \
-  && systemctl start grafana-server \
-  && touch $flag \
-  &
-  barra_progreso "Instalando grafana, por favor espere..."
-  #proceso_finalizado "Instalacion de grafana completada"
-}
 
-instalar_node_red(){
-  npm install -g --unsafe-perm node-red >/dev/null 2>$log \
-  && firewall_port_manager -a 1880/tcp \
-  && touch $flag \
-  &
-  barra_progreso "Instalando node-red, por favor espere..."
-  #proceso_finalizado "Instalacion de node-red completada"
-}
+  instalar_grafana(){
+    (validar -s grafana)
 
-instalar_mariadb(){
-  dnf install -y MariaDB-server >/dev/null 2>$log \
-  && firewall_port_manager -a 3306/tcp \
-  && systemctl enable mariadb.service >/dev/null 2>&1 \
-  && systemctl start mariadb.service \
-  && touch $flag \
-  &
-  barra_progreso "Instalando MariaDB, por favor espere..."
-  #proceso_finalizado "Instalacion de mysql completada"
-}
+    if [ $? -eq 0 ]; then
+      dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
+      && firewall_port_manager -a 3000/tcp \
+      && systemctl enable grafana-server >/dev/null 2>&1 \
+      && systemctl daemon-reload \
+      && systemctl start grafana-server \
+      && touch $flag \
+      &
+      barra_progreso "Instalando grafana, por favor espere..."
+      #proceso_finalizado "Instalacion de grafana completada"
+    fi
+  }
+
+  instalar_nodejs(){
+    #https://nodejs.org/en/download/package-manager
+    (validar node)
+
+    if [ $? -ne 0 ]; then
+      curl -fsSL https://fnm.vercel.app/install | bash >/dev/null 2>&1 \
+      && source $HOME/.bashrc \
+      && version=$(fnm list-remote | grep Iron | tail -n 1) \
+      && vnum=$(echo $version | awk -F'[v.]' '{print $2}') \
+      && fnm use --install-if-missing $vnum >/dev/null 2>&1 \
+      && touch $flag \
+      &
+      barra_progreso "Instalando nodejs $ultima_version, por favor espere..."
+      #proceso_finalizado "Instalacion de nodejs $ultima_version completada"
+    fi
+  }
+
+  instalar_node_red(){
+    (validar -b node-red)
+
+    if [ $? -eq 0 ]; then
+      npm install -g --unsafe-perm node-red >/dev/null 2>&1 \
+      && firewall_port_manager -a 1880/tcp \
+      && mkdir $HOME/.node-red \
+      && cd $HOME/.node-red \
+      && npm install node-red-node-mysql >/dev/null 2>&1 \
+      && touch $flag \
+      &
+      barra_progreso "Instalando node-red, por favor espere..."
+      #proceso_finalizado "Instalacion de node-red completada"
+    fi
+  }
+
+
+
+  instalar_mariadb(){
+    (validar -s mariadb.service)
+
+    if [ $? -eq 0 ]; then
+      dnf install -y MariaDB-server >/dev/null 2>$log \
+      && firewall_port_manager -a 3306/tcp \
+      && systemctl enable mariadb.service >/dev/null 2>&1 \
+      && systemctl start mariadb.service \
+      && mariadb < mariadb_configuracion_inicial.sql >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Instalando MariaDB, por favor espere..."
+      #proceso_finalizado "Instalacion de mysql completada"
+    fi
+  }
+
+  instalar_nginx(){
+    (validar -s nginx)
+
+    if [ $? -eq 0 ]; then
+      dnf install nginx -y >/dev/null 2>$log \
+      && systemctl enable nginx >/dev/null 2>&1 \
+      && systemctl start nginx >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Instalando nginx, por favor espere..."
+      #proceso_finalizado "Instalacion de nginx completada"
+    fi
+  }
+
+  instalar_phpmyadmin(){
+    (validar -d /usr/share/phpMyAdmin)
+
+    if [ $? -eq 0 ]; then
+      dnf install phpmyadmin -y >/dev/null 2>$log \
+      && cp phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
+      && systemctl restart nginx >/dev/null 2>$log \
+      && setenforce 0 \
+      && touch $flag \
+      &
+      barra_progreso "Instalando phpMyAdmin, por favor espere..."
+      #proceso_finalizado "Instalacion de phpMyAdmin completada"
+    fi
+  }
+#
+
 
 
 
@@ -87,46 +158,102 @@ instalar_mariadb(){
 ##########################################################################################
 # DESINSTALACION PSA
 ##########################################################################################
-desinstalacion_psa(){
-  desinstalar_grafana
-  desinstalar_node_red
-  desinstalar_mariadb
-  proceso_finalizado "Desinstalacion de servidores completada"
-}
+  desinstalacion_psa(){
+    desinstalar_grafana
+    desinstalar_node_red
+    desinstalar_nodejs
+    desinstalar_mariadb
+    desinstalar_phpmyadmin
+    desinstalar_nginx
+    proceso_finalizado "Desinstalacion de servidores completada"
+  }
 
 
-desinstalar_grafana(){
-  systemctl stop grafana-server >/dev/null 2>&1 \
-  && dnf remove grafana-enterprise -y >/dev/null 2>$log \
-  && firewall_port_manager -r 3000/tcp \
-  && touch $flag \
-  &
-  barra_progreso "Desinstalando grafana, por favor espere..."
-  #proceso_finalizado "Desinstalacion de grafana completada"
-}
+  desinstalar_grafana(){
+    (validar -s grafana-server)
 
-desinstalar_node_red(){
-    npm uninstall -g node-red >/dev/null 2>$log \
-    && firewall_port_manager -r 1880/tcp \
-    && touch $flag \
-    &
-    barra_progreso "desinstalando node-red, por favor espere..."
-    #proceso_finalizado "Desinstalacion de node-red completada"
-}
+    if [ $? -eq 1 ]; then
+      dnf remove grafana-enterprise -y >/dev/null 2>$log \
+      && rm -fr /etc/grafana /var/lib/grafana \
+      && firewall_port_manager -r 3000/tcp \
+      && systemctl daemon-reload \
+      && touch $flag \
+      &
+      barra_progreso "Desinstalando grafana, por favor espere..."
+      #proceso_finalizado "Desinstalacion de grafana completada"
+    fi
+  }
 
-desinstalar_mariadb(){
-  systemctl stop mariadb.service >/dev/null 2>&1  \
-  ;  dnf remove -y mariadb >/dev/null 2>&1        \
-  && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql \
-  && firewall_port_manager -r 3306/tcp \
-  && touch $flag \
-  &
-  barra_progreso "desinstalando MariaDB, por favor espere..."
-  #proceso_finalizado "Desinstalacion de mysql completada"
-}
+  desinstalar_nodejs(){
+    (validar -b fnm)
 
+    if [ $? -eq 1 ]; then
+      version=$(fnm current)
+      fnm uninstall $version >/dev/null 2>&1 \
+      && rm -fr $HOME/.npm \
+      && touch $flag \
+      &
+      barra_progreso "Desinstalando nodejs $version, por favor espere..."
+      #proceso_finalizado "Desinstalacion de nodejs $version completada"
+    fi
+  }
 
+  desinstalar_node_red(){
+    (validar -b node-red)
 
+    if [ $? -eq 1 ]; then
+      npm uninstall -g node-red >/dev/null 2>&1 \
+      && firewall_port_manager -r 1880/tcp \
+      && rm -fr $HOME/.node* \
+      && touch $flag \
+      &
+      barra_progreso "desinstalando node-red, por favor espere..."
+      #proceso_finalizado "Desinstalacion de node-red completada"
+    fi
+  }
+
+  desinstalar_mariadb(){
+    (validar -s mariadb)
+
+    if [ $? -eq 1 ]; then
+      systemctl stop mariadb.service >/dev/null 2>&1  \
+      ;  dnf remove -y mariadb >/dev/null 2>&1        \
+      && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql $HOME/.mysql_history \
+      && firewall_port_manager -r 3306/tcp \
+      && touch $flag \
+      &
+      barra_progreso "desinstalando MariaDB, por favor espere..."
+      #proceso_finalizado "Desinstalacion de mysql completada"
+    fi
+  }
+
+  desinstalar_nginx(){
+    (validar -s nginx)
+
+    if [ $? -eq 1 ]; then
+      systemctl disable nginx >/dev/null 2>&1 \
+      && dnf remove nginx -y >/dev/null 2>$log \
+      && rm -fr /etc/nginx \
+      && touch $flag \
+      &
+      barra_progreso "desinstalando nginx, por favor espere..."
+      #proceso_finalizado "Desinstalacion de nginx completada"
+    fi
+  }
+
+  desinstalar_phpmyadmin(){
+    (validar -d /usr/share/phpMyAdmin)
+
+    if [ $? -eq 1 ]; then
+      dnf remove phpmyadmin -y >/dev/null 2>$log \
+      && rm -fr /etc/nginx/conf.d/phpmyadmin.conf >/dev/null \
+      && touch $flag \
+      &
+      barra_progreso "desinstalando phpMyAdmin, por favor espere..."
+      #proceso_finalizado "Desinstalacion de phpMyAdmin completada"
+    fi
+  }
+#
 
 
 
@@ -135,61 +262,87 @@ desinstalar_mariadb(){
 
 
 ##########################################################################################
-# UTILIDADES DEL SCRIPT
+# UTILIDADES NECESARIAS PARA EL SCRIPT
 ##########################################################################################
 
-#=========================================================
-# VARIABLES GLOBALES =====================================
-log="$(pwd)/installer_log"
-flag="$(pwd)/stop_progress_bar"
+  #=========================================================
+  # VARIABLES GLOBALES =====================================
+  log="$HOME/installer_log"
+  flag="$HOME/stop_progress_bar"
 
 
-#=========================================================
-# BARRA DE PROGRESO ======================================
-barra_progreso(){
-  {
-    for (( i=10; i<=100; i++ )) ; do
-      echo $i
-      if [ -e $flag ] ; then
-        echo 100
-        break;
-      fi
-      sleep 10
-    done
-    sleep 3
-  } | whiptail --gauge "${1}" 6 80 0
-  rm -f $flag
-}
+  #=========================================================
+  # BARRA DE PROGRESO ======================================
+  barra_progreso(){
+    {
+      for (( i=10; i<=100; i++ )) ; do
+        echo $i
+        if [ -e $flag ] ; then
+          echo 100
+          break;
+        fi
+        sleep 10
+      done
+      sleep 3
+    } | whiptail --gauge "${1}" 6 80 0
+    rm -f $flag
+  }
 
 
-#=========================================================
-# FINALIZACION DE PROCESO ================================
-proceso_finalizado(){
-  msj=$1
+  #=========================================================
+  # FINALIZACION DE PROCESO ================================
+  proceso_finalizado(){
+    msj=$1
 
-  if [ -s $log ] ; then
-    msj="Algo salio mal, revise el archivo: ${log}"
-  else
-    rm -f $log
-  fi
+    if [ -s $log ] ; then
+      msj="Algo salio mal, revise el archivo: ${log}"
+    else
+      rm -f $log
+    fi
 
-  whiptail --title "proceso finalizado" --msgbox "$msj" 10 80
-}
-
-
-#=========================================================
-# FIREWALL ADD/REMOVE PORT ===============================
-firewall_port_manager(){
-  case $1 in
-    "-a") firewall-cmd --add-port=$2 --permanent >/dev/null 2>&1 ;;
-
-    "-r") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>&1 ;;
-  esac
-
-  firewall-cmd --reload >/dev/null 2>&1
-}
+    whiptail --title "proceso finalizado" --msgbox "$msj" 10 80
+  }
 
 
+  #=========================================================
+  # FIREWALL ADD/REMOVE PORT ===============================
+  firewall_port_manager(){
+    case $1 in
+      "-a") firewall-cmd --add-port=$2 --permanent >/dev/null 2>&1 ;;
+
+      "-r") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>&1 ;;
+    esac
+
+    firewall-cmd --reload >/dev/null 2>&1
+  }
+
+
+  #=========================================================
+  # VALIDAR DIRECTORIO, SERVICIO, BINARIO EN EL PATH
+  # DEVUELVE 1 SI EXISTE, DEVUELVE 0 SI NO EXISTE
+  #=========================================================
+  validar(){
+    case $1 in
+      #directorio -d
+      "-d") ls "$2" >/dev/null 2>&1 ;;
+      
+      #servicio -s
+      "-s") systemctl stop "$2" >/dev/null 2>&1 ;;
+
+      #binario en path
+      "-b") which "$2" >/dev/null 2>&1 ;;
+
+
+
+    esac
+
+    if [ $? -eq 0 ]; then
+      exit 1
+    else
+      exit 0
+    fi
+  }
+#
 
 
 
