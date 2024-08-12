@@ -1,0 +1,33 @@
+#!/bin/bash
+case $1 in
+    "host") hostname ;;
+
+    "cpu") top -b -n 1 -d 1 | grep "Cpu(s)" | awk '{print $2}' ;;
+
+    "disco-total") df -B1G / | awk 'NR==2 {print $2}' ;;
+    "disco-usado") df -B1G / | awk 'NR==2 {print $3}' ;;
+    "disco-libre") df -B1G / | awk 'NR==2 {print $4}' ;;
+
+    "mem-total") free --mega | grep Mem: | awk '{print $2}' ;;
+    "mem-usada") free --mega | grep Mem: | awk '{print $3}' ;;
+    "mem-libre") free --mega | grep Mem: | awk '{print $7}' ;;
+
+    "interfaz") ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}' ;;
+
+    "data-rx")
+        interfaz=$(ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}')
+        megabytes=$(ifconfig $interfaz | grep "RX packets" | awk '{printf "%.2f\n", $5 / 1048576}')
+        echo $megabytes
+        ;;
+    
+    "data-tx")
+        interfaz=$(ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}')
+        megabytes=$(ifconfig $interfaz | grep "TX packets" | awk '{printf "%.2f\n", $5 / 1048576}')
+        echo $megabytes
+        ;;
+
+    "usuarios-activos") echo "$(w | wc -l) - 1" | bc ;;
+
+    *)  echo "parametro '$1' no reconocido."
+
+esac

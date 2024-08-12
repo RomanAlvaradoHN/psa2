@@ -49,6 +49,7 @@ menu_principal(){
     instalar_mariadb
     instalar_nginx
     instalar_phpmyadmin
+    instalar_comandos
     proceso_finalizado "Instalacion de servidores completada"
   }
 
@@ -112,7 +113,8 @@ menu_principal(){
       && firewall_port_manager -a 3306/tcp \
       && systemctl enable mariadb.service >/dev/null 2>&1 \
       && systemctl start mariadb.service \
-      && mariadb < mariadb_configuracion_inicial.sql >/dev/null 2>$log \
+      && mariadb < configs/user.sql >/dev/null 2>$log \
+      && mariadb < configs/db_psa2.sql >/dev/null 2>$log \
       && touch $flag \
       &
       barra_progreso "Instalando MariaDB, por favor espere..."
@@ -139,7 +141,7 @@ menu_principal(){
 
     if [ $? -eq 0 ]; then
       dnf install phpmyadmin -y >/dev/null 2>$log \
-      && cp phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
+      && cp configs/phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
       && systemctl restart nginx >/dev/null 2>$log \
       && setenforce 0 \
       && touch $flag \
@@ -147,6 +149,11 @@ menu_principal(){
       barra_progreso "Instalando phpMyAdmin, por favor espere..."
       #proceso_finalizado "Instalacion de phpMyAdmin completada"
     fi
+  }
+
+  instalar_comandos(){
+    ln -s "$(pwd)/psaii" /usr/bin
+    ln -s "$(pwd)/serverdata" /usr/bin
   }
 #
 
@@ -165,6 +172,7 @@ menu_principal(){
     desinstalar_mariadb
     desinstalar_phpmyadmin
     desinstalar_nginx
+    desinstalar_comandos
     proceso_finalizado "Desinstalacion de servidores completada"
   }
 
@@ -252,6 +260,11 @@ menu_principal(){
       barra_progreso "desinstalando phpMyAdmin, por favor espere..."
       #proceso_finalizado "Desinstalacion de phpMyAdmin completada"
     fi
+  }
+
+  desinstalar_comandos(){
+    rm -f /usr/bin/psaii
+    rm -f /usr/bin/serverdata
   }
 #
 
