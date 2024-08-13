@@ -58,7 +58,10 @@ menu_principal(){
     (validar -s grafana-server)
 
     if [ $? -eq 0 ]; then
-      dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
+      wget -q -O configs/grafana/gpg.key https://rpm.grafana.com/gpg.key \
+      && rpm --import configs/grafana/gpg.key \
+      && cp configs/grafana/grafana.repo /etc/yum.repos.d/ \
+      && dnf install -y grafana-enterprise >/dev/null 2>$log \
       && firewall_port_manager -a 3000/tcp \
       && systemctl enable grafana-server >/dev/null 2>&1 \
       && systemctl daemon-reload \
@@ -93,7 +96,8 @@ menu_principal(){
     if [ $? -eq 0 ]; then
       npm install -g --unsafe-perm node-red >/dev/null 2>&1 \
       && firewall_port_manager -a 1880/tcp \
-      && mkdir $HOME/.node-red \
+      && mkdir -p $HOME/.node-red/lib/flows \
+      && cp configs/node-red/server_data.json $HOME/.node-red/lib/flows \
       && cd $HOME/.node-red \
       && npm install node-red-node-mysql >/dev/null 2>&1 \
       && touch $flag \
@@ -103,8 +107,6 @@ menu_principal(){
     fi
   }
 
-
-
   instalar_mariadb(){
     (validar -s mariadb.service)
 
@@ -113,8 +115,8 @@ menu_principal(){
       && firewall_port_manager -a 3306/tcp \
       && systemctl enable mariadb.service >/dev/null 2>&1 \
       && systemctl start mariadb.service \
-      && mariadb < configs/user.sql >/dev/null 2>$log \
-      && mariadb < configs/db_psa2.sql >/dev/null 2>$log \
+      && mariadb < configs/mariadb/user.sql >/dev/null 2>$log \
+      && mariadb < configs/mariadb/db_psa2.sql >/dev/null 2>$log \
       && touch $flag \
       &
       barra_progreso "Instalando MariaDB, por favor espere..."
@@ -141,7 +143,7 @@ menu_principal(){
 
     if [ $? -eq 0 ]; then
       dnf install phpmyadmin -y >/dev/null 2>$log \
-      && cp configs/phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
+      && cp configs/phpmyadmin/phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
       && systemctl restart nginx >/dev/null 2>$log \
       && setenforce 0 \
       && touch $flag \
@@ -152,6 +154,10 @@ menu_principal(){
   }
 
   instalar_comandos(){
+    #borrar los viejos si ya existen:
+    rm -f /usr/bin/psaii /usr/bin/serverdata
+
+    #crear los nuevos:
     ln -s "$(pwd)/psaii" /usr/bin 2>/dev/null
     ln -s "$(pwd)/serverdata" /usr/bin 2>/dev/null
   }
@@ -181,8 +187,9 @@ menu_principal(){
     (validar -s grafana-server)
 
     if [ $? -eq 1 ]; then
-      dnf remove grafana-enterprise -y >/dev/null 2>$log \
+      dnf remove grafana-enterprise -y >/dev/null 2>&1 \
       && rm -fr /etc/grafana /var/lib/grafana \
+      && rm -fr /etc/yum.repos.d/grafana.repo \
       && firewall_port_manager -r 3000/tcp \
       && systemctl daemon-reload \
       && touch $flag \
@@ -226,7 +233,7 @@ menu_principal(){
     if [ $? -eq 1 ]; then
       systemctl stop mariadb.service >/dev/null 2>&1  \
       ;  dnf remove -y mariadb >/dev/null 2>&1        \
-      && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql $HOME/.mysql_history \
+      && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql $HOME/.mariadb_history \
       && firewall_port_manager -r 3306/tcp \
       && touch $flag \
       &
@@ -263,8 +270,7 @@ menu_principal(){
   }
 
   desinstalar_comandos(){
-    rm -f /usr/bin/psaii
-    rm -f /usr/bin/serverdata
+    rm -f /usr/bin/psaii /usr/bin/serverdata
   }
 #
 
@@ -342,11 +348,8 @@ menu_principal(){
       #servicio -s
       "-s") systemctl stop "$2" >/dev/null 2>&1 ;;
 
-      #binario en path
+      #binario en $PATH
       "-b") which "$2" >/dev/null 2>&1 ;;
-
-
-
     esac
 
     if [ $? -eq 0 ]; then
