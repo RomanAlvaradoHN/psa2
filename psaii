@@ -55,7 +55,7 @@ menu_principal(){
 
 
   instalar_grafana(){
-    (validar -s grafana)
+    (validar -s grafana-server)
 
     if [ $? -eq 0 ]; then
       dnf install -y https://dl.grafana.com/enterprise/release/grafana-enterprise-11.1.0-1.x86_64.rpm >/dev/null 2>$log \
@@ -152,8 +152,8 @@ menu_principal(){
   }
 
   instalar_comandos(){
-    ln -s "$(pwd)/psaii" /usr/bin
-    ln -s "$(pwd)/serverdata" /usr/bin
+    ln -s "$(pwd)/psaii" /usr/bin 2>/dev/null
+    ln -s "$(pwd)/serverdata" /usr/bin 2>/dev/null
   }
 #
 
