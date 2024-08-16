@@ -86,7 +86,7 @@ menu_principal(){
   iniciar_grafana(){
     (validar -s grafana-server)
     if [ $? -eq 1 ]; then
-      && systemctl enable grafana-server >/dev/null 2>$log \
+      systemctl enable grafana-server >/dev/null 2>$log \
       && systemctl daemon-reload \
       && systemctl start grafana-server >/dev/null 2>$log \
       && touch $flag \
