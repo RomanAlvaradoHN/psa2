@@ -654,7 +654,7 @@
         "z": "43dc44354d108903",
         "g": "2b1687789267aa98",
         "name": "Query",
-        "func": "let d = msg.payload;\n\nlet query = \n`INSERT INTO SERVER_DATA(\n    host,\n    cpu,\n    mem_total,\n    mem_libre,\n    mem_usada,\n    disco_total,\n    disco_libre,\n    disco_usado,\n    usuarios_activos,\n    interfaz,\n    data_rx,\n    data_tx\n)VALUES(\n    '${d.host}',\n    ${d.cpu},\n    ${d.mem_total},\n    ${d.mem_libre},\n    ${d.mem_usada},\n    ${d.disco_total},\n    ${d.disco_libre},\n    ${d.disco_usado},\n    ${d.usuarios_activos},\n    '${d.interfaz}',\n    ${d.data_rx},\n    ${d.data_tx}\n)`;\n\n\n\nreturn {\n    topic: query\n}",
+        "func": "let d = msg.payload;\n\nlet query = \n`INSERT INTO servers_data(\n    host,\n    cpu,\n    mem_total,\n    mem_libre,\n    mem_usada,\n    disco_total,\n    disco_libre,\n    disco_usado,\n    usuarios_activos,\n    interfaz,\n    data_rx,\n    data_tx\n)VALUES(\n    '${d.host}',\n    ${d.cpu},\n    ${d.mem_total},\n    ${d.mem_libre},\n    ${d.mem_usada},\n    ${d.disco_total},\n    ${d.disco_libre},\n    ${d.disco_usado},\n    ${d.usuarios_activos},\n    '${d.interfaz}',\n    ${d.data_rx},\n    ${d.data_tx}\n)`;\n\n\n\nreturn {\n    topic: query\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
