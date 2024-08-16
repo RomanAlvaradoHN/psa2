@@ -4,25 +4,22 @@
 # MENU PRINCIPAL
 ##########################################################################################
 menu_principal(){
-
+  titulo="((  MENU PRINCIPAL  ))"
+  texto="¿Que desea hacer?"
+  
   while true ; do
-
-    respuesta=$(whiptail --title "((   MENU PRINCIPAL  ))" --menu "¿Qué desea hacer?" 20 80 6 \
-        "1" "Instalacion PSA"      \
-        "2" "Desinstalacion PSA"   \
-        "3" "Salir"                \
+    respuesta=$(whiptail --title "$titulo" --menu "$texto" 20 80 6 \
+      "1" "Instalacion PSA"      \
+      "2" "Desinstalacion PSA"   \
+      "3" "Salir"                \
       3>&1 1>&2 2>&3
     )
 
-    if [ $? == 0 ]; then
+    if [ $? -eq 0 ]; then
       case $respuesta in
-
         "1") instalacion_psa ;;
-
         "2") desinstalacion_psa ;;
-
         "3") exit 0 ;;
-
           *) continue ;;
       esac
 
@@ -43,20 +40,21 @@ menu_principal(){
 # INSTALACION PSA
 ##########################################################################################
   instalacion_psa(){
-    instalar_grafana
-    instalar_nodejs
-    instalar_node_red
-    instalar_mariadb
-    instalar_nginx
+    rm -fr /usr/bin/psaii && ln -s "$(pwd)/psaii" /usr/bin
+
+    #instalar_grafana
+    #instalar_node_red
+    #instalar_mariadb
+    #instalar_nginx
     instalar_phpmyadmin
-    instalar_comandos
     proceso_finalizado "Instalacion de servidores completada"
   }
+  
+
 
 
   instalar_grafana(){
     (validar -s grafana-server)
-
     if [ $? -eq 0 ]; then
       wget -q -O configs/grafana/gpg.key https://rpm.grafana.com/gpg.key \
       && rpm --import configs/grafana/gpg.key \
@@ -73,33 +71,43 @@ menu_principal(){
     fi
   }
 
-  instalar_nodejs(){
-    #https://nodejs.org/en/download/package-manager
-    (validar node)
-
-    if [ $? -ne 0 ]; then
-      curl -fsSL https://fnm.vercel.app/install | bash >/dev/null 2>&1 \
-      && source $HOME/.bashrc \
-      && version=$(fnm list-remote | grep Iron | tail -n 1) \
-      && vnum=$(echo $version | awk -F'[v.]' '{print $2}') \
-      && fnm use --install-if-missing $vnum >/dev/null 2>&1 \
-      && touch $flag \
-      &
-      barra_progreso "Instalando nodejs $ultima_version, por favor espere..."
-      #proceso_finalizado "Instalacion de nodejs $ultima_version completada"
-    fi
-  }
 
   instalar_node_red(){
-    (validar -b node-red)
+    #Sub_funciones==========================
+    instalar_fnm(){
+      (validar -b fnm)
+      if [ $? -eq 0 ]; then
+        curl -fsSL https://fnm.vercel.app/install | bash >/dev/null 2>&1
+        source $HOME/.bashrc >/dev/null 2>&1
+      fi
+    }
 
+    instalar_nodejs(){
+      (validar -b node)
+      if [ $? -eq 0 ]; then
+        instalar_fnm
+        version=$(fnm list-remote | grep Iron | tail -n 1)
+        vnum=$(echo $version | awk -F'[v.]' '{print $2}')
+        fnm use --install-if-missing $vnum >/dev/null 2>&1
+      fi
+    }
+
+    instalar_comando_serverdata(){
+      rm -fr /usr/bin/serverdata
+      ln -s "$HOME/.node-red/serverdata" /usr/bin
+    }
+    #=======================================
+
+    (validar -b node-red)
     if [ $? -eq 0 ]; then
-      npm install -g --unsafe-perm node-red >/dev/null 2>&1 \
+      instalar_nodejs \
+      && npm install -g --unsafe-perm node-red >/dev/null 2>$log\
       && firewall_port_manager -a 1880/tcp \
-      && mkdir -p $HOME/.node-red/lib/flows \
-      && cp configs/node-red/server_data.json $HOME/.node-red/lib/flows \
+      && mkdir -p $HOME/.node-red \
+      && cp -r configs/node-red/* $HOME/.node-red/ \
       && cd $HOME/.node-red \
-      && npm install node-red-node-mysql >/dev/null 2>&1 \
+      && npm install node-red-node-mysql >/dev/null 2>$log \
+      && instalar_comando_serverdata \
       && touch $flag \
       &
       barra_progreso "Instalando node-red, por favor espere..."
@@ -109,7 +117,6 @@ menu_principal(){
 
   instalar_mariadb(){
     (validar -s mariadb.service)
-
     if [ $? -eq 0 ]; then
       dnf install -y MariaDB-server >/dev/null 2>$log \
       && firewall_port_manager -a 3306/tcp \
@@ -126,7 +133,6 @@ menu_principal(){
 
   instalar_nginx(){
     (validar -s nginx)
-
     if [ $? -eq 0 ]; then
       dnf install nginx -y >/dev/null 2>$log \
       && systemctl enable nginx >/dev/null 2>&1 \
@@ -140,26 +146,17 @@ menu_principal(){
 
   instalar_phpmyadmin(){
     (validar -d /usr/share/phpMyAdmin)
-
     if [ $? -eq 0 ]; then
       dnf install phpmyadmin -y >/dev/null 2>$log \
       && cp configs/phpmyadmin/phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
       && systemctl restart nginx >/dev/null 2>$log \
+      && sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config >/dev/null 2>$log \
       && setenforce 0 \
       && touch $flag \
       &
       barra_progreso "Instalando phpMyAdmin, por favor espere..."
       #proceso_finalizado "Instalacion de phpMyAdmin completada"
     fi
-  }
-
-  instalar_comandos(){
-    #borrar los viejos si ya existen:
-    rm -f /usr/bin/psaii /usr/bin/serverdata
-
-    #crear los nuevos:
-    ln -s "$(pwd)/psaii" /usr/bin 2>/dev/null
-    ln -s "$(pwd)/serverdata" /usr/bin 2>/dev/null
   }
 #
 
@@ -172,20 +169,19 @@ menu_principal(){
 # DESINSTALACION PSA
 ##########################################################################################
   desinstalacion_psa(){
-    desinstalar_grafana
-    desinstalar_node_red
-    desinstalar_nodejs
-    desinstalar_mariadb
+    rm -fr /usr/bin/psaii
+
+    #desinstalar_grafana
+    #desinstalar_node_red
+    #desinstalar_mariadb
     desinstalar_phpmyadmin
-    desinstalar_nginx
-    desinstalar_comandos
+    #desinstalar_nginx
     proceso_finalizado "Desinstalacion de servidores completada"
   }
 
 
   desinstalar_grafana(){
     (validar -s grafana-server)
-
     if [ $? -eq 1 ]; then
       dnf remove grafana-enterprise -y >/dev/null 2>&1 \
       && rm -fr /etc/grafana /var/lib/grafana \
@@ -199,27 +195,43 @@ menu_principal(){
     fi
   }
 
-  desinstalar_nodejs(){
-    (validar -b fnm)
-
-    if [ $? -eq 1 ]; then
-      version=$(fnm current)
-      fnm uninstall $version >/dev/null 2>&1 \
-      && rm -fr $HOME/.npm \
-      && touch $flag \
-      &
-      barra_progreso "Desinstalando nodejs $version, por favor espere..."
-      #proceso_finalizado "Desinstalacion de nodejs $version completada"
-    fi
-  }
 
   desinstalar_node_red(){
-    (validar -b node-red)
+    #Sub_funciones==========================
+    desinstalar_fnm(){
+      (validar -b fnm)
+      if [ $? -eq 1 ]; then
+        #.bashrc----
+        archivo="$HOME/.bashrc"
+        cp $HOME/.bashrc $HOME/.bashrc.backup
+        patron="# fnm"
+        conteo=$(grep "$patron" "$archivo" | wc -l)    
+        for (( i=0; i<$conteo; i++)); do
+            linea=$(grep -n "$patron" "$archivo" | awk -F: '{print $1}' | head -n 1)
+            sed -i "$linea,+5d" "$archivo"
+        done
+        # fnm-------
+        rm -fr $(dirname $(command -v fnm))
+        source "$archivo" >/dev/null 2>$log
+      fi
+    }
 
+    desinstalar_nodejs(){
+      (validar -b node)
+      if [ $? -eq 1 ]; then
+        fnm uninstall $(fnm current) >/dev/null 2>$log
+        rm -fr $HOME/.npm
+        desinstalar_fnm
+      fi
+    }
+    #=======================================
+      
+    (validar -b node-red)
     if [ $? -eq 1 ]; then
       npm uninstall -g node-red >/dev/null 2>&1 \
       && firewall_port_manager -r 1880/tcp \
-      && rm -fr $HOME/.node* \
+      && rm -fr $HOME/.node* /usr/bin/serverdata\
+      && desinstalar_nodejs \
       && touch $flag \
       &
       barra_progreso "desinstalando node-red, por favor espere..."
@@ -229,7 +241,6 @@ menu_principal(){
 
   desinstalar_mariadb(){
     (validar -s mariadb)
-
     if [ $? -eq 1 ]; then
       systemctl stop mariadb.service >/dev/null 2>&1  \
       ;  dnf remove -y mariadb >/dev/null 2>&1        \
@@ -244,7 +255,6 @@ menu_principal(){
 
   desinstalar_nginx(){
     (validar -s nginx)
-
     if [ $? -eq 1 ]; then
       systemctl disable nginx >/dev/null 2>&1 \
       && dnf remove nginx -y >/dev/null 2>$log \
@@ -258,19 +268,16 @@ menu_principal(){
 
   desinstalar_phpmyadmin(){
     (validar -d /usr/share/phpMyAdmin)
-
     if [ $? -eq 1 ]; then
       dnf remove phpmyadmin -y >/dev/null 2>$log \
-      && rm -fr /etc/nginx/conf.d/phpmyadmin.conf >/dev/null \
+      && rm -fr /etc/nginx/conf.d/phpmyadmin.conf \
+      && sed -i 's/SELINUX=permissive/SELINUX=enforcing/' /etc/selinux/config >/dev/null 2>$log \
+      && setenforce 1 \
       && touch $flag \
       &
       barra_progreso "desinstalando phpMyAdmin, por favor espere..."
       #proceso_finalizado "Desinstalacion de phpMyAdmin completada"
     fi
-  }
-
-  desinstalar_comandos(){
-    rm -f /usr/bin/psaii /usr/bin/serverdata
   }
 #
 
@@ -349,7 +356,7 @@ menu_principal(){
       "-s") systemctl stop "$2" >/dev/null 2>&1 ;;
 
       #binario en $PATH
-      "-b") which "$2" >/dev/null 2>&1 ;;
+      "-b") command -v "$2" >/dev/null 2>&1 ;;
     esac
 
     if [ $? -eq 0 ]; then

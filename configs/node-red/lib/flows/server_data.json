@@ -1,0 +1,837 @@
+[
+    {
+        "id": "43dc44354d108903",
+        "type": "tab",
+        "label": "SERVER_DATA",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c764aca9e6f3185a",
+        "type": "group",
+        "z": "43dc44354d108903",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "d71c4c53b4871fc7",
+            "2b1687789267aa98",
+            "b04c56ae5517cc37"
+        ],
+        "x": 14,
+        "y": 15.5,
+        "w": 1028,
+        "h": 699
+    },
+    {
+        "id": "2b1687789267aa98",
+        "type": "group",
+        "z": "43dc44354d108903",
+        "g": "c764aca9e6f3185a",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "da308d91585975d5",
+            "ac28cd5a7318b869",
+            "a6207c228cc35382",
+            "f16e6b099fca057a",
+            "0fbc9f3267d0a140",
+            "2696ab65c04a82da"
+        ],
+        "x": 554,
+        "y": 249,
+        "w": 462,
+        "h": 182
+    },
+    {
+        "id": "b04c56ae5517cc37",
+        "type": "group",
+        "z": "43dc44354d108903",
+        "g": "c764aca9e6f3185a",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "0672c2e1801ca384",
+            "35a982d2d2525635",
+            "d8385c9b5205cbbc",
+            "15e2cfd42f1437b8",
+            "e28f4f2aaec44da4",
+            "46ec29892e719444",
+            "c06742f0ce497fab",
+            "6a39edf82a6e4a9d",
+            "a927c96ac977bfb5",
+            "1d675ead06bebc67",
+            "d6c87de6dd3c99f3",
+            "4c0b0072a304ebec",
+            "d1b172afce0bc49c",
+            "46be4892ee92c0dc",
+            "81ad0747e9ec3521",
+            "7dc9054762126e19",
+            "651a659f8ebf3319",
+            "0092250093fc4694",
+            "62e4284459ce9e58",
+            "b1ed7086177eb6f7",
+            "633894c1cf3f2fef",
+            "a2e9b5e54d2836f0",
+            "49d2bfeffdc7c7ba",
+            "d018f2a5a21b031f"
+        ],
+        "x": 184,
+        "y": 41.5,
+        "w": 372,
+        "h": 647
+    },
+    {
+        "id": "d71c4c53b4871fc7",
+        "type": "inject",
+        "z": "43dc44354d108903",
+        "g": "c764aca9e6f3185a",
+        "name": "",
+        "props": [],
+        "repeat": "300",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "d1b172afce0bc49c",
+                "49d2bfeffdc7c7ba",
+                "0672c2e1801ca384",
+                "a927c96ac977bfb5",
+                "d6c87de6dd3c99f3",
+                "d8385c9b5205cbbc",
+                "c06742f0ce497fab",
+                "e28f4f2aaec44da4",
+                "633894c1cf3f2fef",
+                "81ad0747e9ec3521",
+                "651a659f8ebf3319",
+                "62e4284459ce9e58"
+            ]
+        ]
+    },
+    {
+        "id": "0672c2e1801ca384",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata cpu",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "cpu",
+        "x": 260,
+        "y": 140,
+        "wires": [
+            [
+                "35a982d2d2525635"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "da308d91585975d5",
+        "type": "join",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "name": "",
+        "mode": "custom",
+        "build": "merged",
+        "property": "",
+        "propertyType": "full",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "12",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 630,
+        "y": 340,
+        "wires": [
+            [
+                "ac28cd5a7318b869",
+                "f16e6b099fca057a"
+            ]
+        ]
+    },
+    {
+        "id": "35a982d2d2525635",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    cpu: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 140,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "d8385c9b5205cbbc",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata disco-total",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "disco_total",
+        "x": 280,
+        "y": 340,
+        "wires": [
+            [
+                "15e2cfd42f1437b8"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "15e2cfd42f1437b8",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    disco_total: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 340,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "e28f4f2aaec44da4",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata disco-usado",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "disco_usado",
+        "x": 280,
+        "y": 440,
+        "wires": [
+            [
+                "46ec29892e719444"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "46ec29892e719444",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    disco_usado: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 440,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "c06742f0ce497fab",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata disco-libre",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "disco_libre",
+        "x": 280,
+        "y": 390,
+        "wires": [
+            [
+                "6a39edf82a6e4a9d"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "6a39edf82a6e4a9d",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    disco_libre: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 390,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "a927c96ac977bfb5",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata mem-total",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "mem_total",
+        "x": 280,
+        "y": 190,
+        "wires": [
+            [
+                "1d675ead06bebc67"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1d675ead06bebc67",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    mem_total: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 190,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "d6c87de6dd3c99f3",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata mem-libre",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "mem_libre",
+        "x": 280,
+        "y": 240,
+        "wires": [
+            [
+                "4c0b0072a304ebec"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "4c0b0072a304ebec",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    mem_libre: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 240,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "d1b172afce0bc49c",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata mem-usada",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "mem_usada",
+        "x": 280,
+        "y": 290,
+        "wires": [
+            [
+                "46be4892ee92c0dc"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "46be4892ee92c0dc",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    mem_usada: msg.payload  \n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 290,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "81ad0747e9ec3521",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata interfaz",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "interfaz",
+        "x": 270,
+        "y": 540,
+        "wires": [
+            [
+                "7dc9054762126e19"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "7dc9054762126e19",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    interfaz: msg.payload\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 540,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "651a659f8ebf3319",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata data-rx",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "data_rx",
+        "x": 270,
+        "y": 590,
+        "wires": [
+            [
+                "0092250093fc4694"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "0092250093fc4694",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    data_rx: msg.payload\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 590,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "62e4284459ce9e58",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata data-tx",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "data_tx",
+        "x": 270,
+        "y": 640,
+        "wires": [
+            [
+                "b1ed7086177eb6f7"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "b1ed7086177eb6f7",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    data_tx: msg.payload\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 640,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "633894c1cf3f2fef",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata usuarios-activos",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "usuarios_activos",
+        "x": 300,
+        "y": 490,
+        "wires": [
+            [
+                "a2e9b5e54d2836f0"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a2e9b5e54d2836f0",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "return {\n    usuarios_activos: msg.payload\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 490,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "ac28cd5a7318b869",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "name": "Query",
+        "func": "let d = msg.payload;\n\nlet query = \n`INSERT INTO SERVER_DATA(\n    host,\n    cpu,\n    mem_total,\n    mem_libre,\n    mem_usada,\n    disco_total,\n    disco_libre,\n    disco_usado,\n    usuarios_activos,\n    interfaz,\n    data_rx,\n    data_tx\n)VALUES(\n    '${d.host}',\n    ${d.cpu},\n    ${d.mem_total},\n    ${d.mem_libre},\n    ${d.mem_usada},\n    ${d.disco_total},\n    ${d.disco_libre},\n    ${d.disco_usado},\n    ${d.usuarios_activos},\n    '${d.interfaz}',\n    ${d.data_rx},\n    ${d.data_tx}\n)`;\n\n\n\nreturn {\n    topic: query\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 340,
+        "wires": [
+            [
+                "a6207c228cc35382"
+            ]
+        ]
+    },
+    {
+        "id": "49d2bfeffdc7c7ba",
+        "type": "exec",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "command": "serverdata host",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "host",
+        "x": 260,
+        "y": 90,
+        "wires": [
+            [
+                "d018f2a5a21b031f"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d018f2a5a21b031f",
+        "type": "function",
+        "z": "43dc44354d108903",
+        "g": "b04c56ae5517cc37",
+        "name": "ToObject",
+        "func": "if((typeof flow.get('host') === \"undefined\")){\n    flow.set('host', msg.payload);\n}\n\nreturn {\n    host: msg.payload,\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 90,
+        "wires": [
+            [
+                "da308d91585975d5"
+            ]
+        ]
+    },
+    {
+        "id": "a6207c228cc35382",
+        "type": "mysql",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "mydb": "a0945b236fb1b99e",
+        "name": "ToMariaDB",
+        "x": 920,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f16e6b099fca057a",
+        "type": "mqtt out",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "name": "ENVIO DE DATOS",
+        "topic": "psa2g9",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "5e96fd62a439fdcb",
+        "x": 670,
+        "y": 390,
+        "wires": []
+    },
+    {
+        "id": "0fbc9f3267d0a140",
+        "type": "mqtt in",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "name": "RECIBO DE DATOS",
+        "topic": "psa2g9",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "5e96fd62a439fdcb",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 670,
+        "y": 290,
+        "wires": [
+            [
+                "2696ab65c04a82da"
+            ]
+        ]
+    },
+    {
+        "id": "2696ab65c04a82da",
+        "type": "switch",
+        "z": "43dc44354d108903",
+        "g": "2b1687789267aa98",
+        "name": "",
+        "property": "payload.host",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "host",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 840,
+        "y": 290,
+        "wires": [
+            [
+                "ac28cd5a7318b869"
+            ]
+        ]
+    },
+    {
+        "id": "a0945b236fb1b99e",
+        "type": "MySQLdatabase",
+        "name": "mariadb",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "db_psa2",
+        "tz": "",
+        "charset": "UTF8MB4"
+    },
+    {
+        "id": "5e96fd62a439fdcb",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "http://broker.hivemq.com/",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
