@@ -1,0 +1,233 @@
+#!/bin/bash
+
+##########################################################################################
+# MENU PRINCIPAL
+##########################################################################################
+menu_principal(){
+  titulo="((  MENU PSA  ))"
+  texto="¿Que desea hacer?"
+  
+  while true ; do
+    respuesta=$(whiptail --title "$titulo" --menu "$texto" 20 80 6 \
+      "1" "Lanzar Servidor PSA"     \
+      "2" "Configurar Servidor PSA" \
+      "3" "Salir"                   \
+      3>&1 1>&2 2>&3
+    )
+
+    if [ $? -eq 0 ]; then
+      case $respuesta in
+        "1") lanzar_servidor_psa ;;
+        "2") configurar_servidor_psa ;;
+        "3") exit 0 ;;
+          *) continue ;;
+      esac
+
+    else
+      break;
+    fi
+  done
+}
+
+
+
+
+
+
+
+
+##########################################################################################
+# LANZAR SERVIDOR PSA
+##########################################################################################
+  lanzar_servidor_psa(){
+    iniciar_mariadb
+    iniciar_node_red
+    iniciar_nginx
+    iniciar_grafana 
+    proceso_finalizado "Lanzamiendo de servidores PSA"
+  }
+  
+
+  iniciar_mariadb(){
+    (validar -s mariadb.service)
+    if [ $? -eq 1 ]; then
+      systemctl enable mariadb.service >/dev/null 2>$log \
+      && systemctl start mariadb.service >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Iniciando MariaDB, por favor espere..."
+      #proceso_finalizado "Instalacion de mysql completada"
+    fi
+  }
+
+  iniciar_node_red(){
+    (validar -b node-red)
+    if [ $? -eq 1 ]; then
+      ((node-red >/dev/null 2>&1) & ) >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Iniciando node-red, por favor espere..."
+      #proceso_finalizado "Instalacion de node-red completada"
+    fi
+  }
+
+  iniciar_nginx(){
+    (validar -s nginx)
+    if [ $? -eq 1 ]; then
+      systemctl enable nginx >/dev/null 2>$log \
+      && systemctl start nginx >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Iniciando nginx, por favor espere..."
+      #proceso_finalizado "Instalacion de nginx completada"
+    fi
+  }
+
+  iniciar_grafana(){
+    (validar -s grafana-server)
+    if [ $? -eq 1 ]; then
+      && systemctl enable grafana-server >/dev/null 2>$log \
+      && systemctl daemon-reload \
+      && systemctl start grafana-server >/dev/null 2>$log \
+      && touch $flag \
+      &
+      barra_progreso "Iniciando grafana, por favor espere..."
+      #proceso_finalizado "Instalacion de grafana completada"
+    fi
+  }
+#
+
+
+
+
+
+
+##########################################################################################
+# CONFIGURAR SERVIDOR PSA
+##########################################################################################
+  configurar_servidor_psa(){
+    configurar_hostname
+    configurar_mariadb
+    configurar_node_red
+    configurar_grafana
+    proceso_finalizado "Configuracion de servidores completada"
+  }
+
+
+  configurar_hostname(){
+    actual=$(hostname)
+    nuevo=$(whiptail --title "(( CONFIGURAR HOSTNAME ))" --inputbox "Ingrese hostname" 8 39 "$actual" 3>&1 1>&2 2>&3)
+
+    if [ $? -eq 0 ]; then
+      hostnamectl hostname $nuevo
+    fi
+  }
+
+  configurar_mariadb(){
+    actual=$(grep mariadb $configs/ports | awk -F: '{print $2}')
+  }
+
+  configurar_node_red(){
+    actual=$(grep node-red $configs/ports | awk -F: '{print $2}')
+  }
+
+  configurar_grafana(){
+    actual=$(grep grafana-server $configs/ports | awk -F: '{print $2}')
+  }
+#
+
+
+
+
+
+
+
+##########################################################################################
+# UTILIDADES NECESARIAS PARA EL SCRIPT
+##########################################################################################
+
+  #=========================================================
+  # VARIABLES GLOBALES =====================================
+  log="$HOME/psa_log"
+  flag="$HOME/stop_progress_bar"
+  configs="$(pwd)/configs"
+
+
+  #=========================================================
+  # BARRA DE PROGRESO ======================================
+  barra_progreso(){
+    {
+      for (( i=10; i<=100; i++ )) ; do
+        echo $i
+        if [ -e $flag ] ; then
+          echo 100
+          break;
+        fi
+        sleep 10
+      done
+      sleep 3
+    } | whiptail --gauge "${1}" 6 80 0
+    rm -f $flag
+  }
+
+
+  #=========================================================
+  # FINALIZACION DE PROCESO ================================
+  proceso_finalizado(){
+    msj=$1
+
+    if [ -s $log ] ; then
+      msj="Algo salio mal, revise el archivo: ${log}"
+    else
+      rm -f $log
+    fi
+
+    whiptail --title "proceso finalizado" --msgbox "$msj" 10 80
+  }
+
+
+  #=========================================================
+  # FIREWALL ADD/REMOVE PORT ===============================
+  firewall_port_manager(){
+    puerto=$(grep $1 $configs/ports | awk -F: '{print $2}')
+
+    case $2 in
+      "-add") firewall-cmd --add-port=$puerto --permanent ;;
+
+      "-rm") firewall-cmd --remove-port=$puerto --permanent;;
+    esac
+
+    firewall-cmd --reload >/dev/null 2>&1
+  }
+
+
+  #=========================================================
+  # VALIDAR DIRECTORIO, SERVICIO, BINARIO EN EL PATH
+  # DEVUELVE 1 SI EXISTE, DEVUELVE 0 SI NO EXISTE
+  #=========================================================
+  validar(){
+    case $1 in
+      #directorio -d
+      "-d") ls "$2" >/dev/null 2>&1 ;;
+      
+      #servicio -s
+      "-s") systemctl stop "$2" >/dev/null 2>&1 ;;
+
+      #binario en $PATH
+      "-b") command -v "$2" >/dev/null 2>&1 ;;
+    esac
+
+    if [ $? -eq 0 ]; then
+      exit 1
+    else
+      exit 0
+    fi
+  }
+#
+
+
+
+##########################################################################################
+# INICIALIZADOR DEL SCRIPT
+##########################################################################################
+menu_principal

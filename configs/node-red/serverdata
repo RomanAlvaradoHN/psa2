@@ -2,24 +2,29 @@
 case $1 in
     "host") hostname ;;
 
+    #Porcentaje de uso de cpu
     "cpu") top -b -n 1 -d 1 | grep "Cpu(s)" | awk '{print $2}' ;;
 
+    #Valores devueltos en  GigaBytes
     "disco-total") df -B1G / | awk 'NR==2 {print $2}' ;;
     "disco-usado") df -B1G / | awk 'NR==2 {print $3}' ;;
     "disco-libre") df -B1G / | awk 'NR==2 {print $4}' ;;
 
+    #Valores devueltos en  MegaBytes
     "mem-total") free --mega | grep Mem: | awk '{print $2}' ;;
     "mem-usada") free --mega | grep Mem: | awk '{print $3}' ;;
     "mem-libre") free --mega | grep Mem: | awk '{print $7}' ;;
 
     "interfaz") ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}' ;;
 
+    #Valor devuelto en MegaBytes
     "data-rx")
         interfaz=$(ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}')
         megabytes=$(ifconfig $interfaz | grep "RX packets" | awk '{printf "%.2f\n", $5 / 1048576}')
         echo $megabytes
         ;;
-    
+
+    #Valor devuelto en MegaBytes
     "data-tx")
         interfaz=$(ifconfig | grep enp0s | head -n 1 | awk -F':' '{print $1}')
         megabytes=$(ifconfig $interfaz | grep "TX packets" | awk '{printf "%.2f\n", $5 / 1048576}')

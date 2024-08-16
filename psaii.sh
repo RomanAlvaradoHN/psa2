@@ -4,7 +4,7 @@
 # MENU PRINCIPAL
 ##########################################################################################
 menu_principal(){
-  titulo="((  MENU PRINCIPAL  ))"
+  titulo="((  MENU PRINCIPAL PSAII  ))"
   texto="¿Que desea hacer?"
   
   while true ; do
@@ -40,12 +40,13 @@ menu_principal(){
 # INSTALACION PSA
 ##########################################################################################
   instalacion_psa(){
-    rm -fr /usr/bin/psaii && ln -s "$(pwd)/psaii" /usr/bin
+    rm -fr /usr/bin/psaii.sh && ln -s "$(pwd)/psaii.sh" /usr/bin
+    rm -fr /usr/bin/psa && ln -s "$(pwd)/configs/psa" /usr/bin
 
     #instalar_grafana
-    #instalar_node_red
     #instalar_mariadb
-    #instalar_nginx
+    #instalar_node_red
+    instalar_nginx
     instalar_phpmyadmin
     proceso_finalizado "Instalacion de servidores completada"
   }
@@ -57,13 +58,10 @@ menu_principal(){
     (validar -s grafana-server)
     if [ $? -eq 0 ]; then
       wget -q -O configs/grafana/gpg.key https://rpm.grafana.com/gpg.key \
-      && rpm --import configs/grafana/gpg.key \
-      && cp configs/grafana/grafana.repo /etc/yum.repos.d/ \
+      && rpm --import $configs/grafana/gpg.key \
+      && cp $configs/grafana/grafana.repo /etc/yum.repos.d/ \
       && dnf install -y grafana-enterprise >/dev/null 2>$log \
-      && firewall_port_manager -a 3000/tcp \
-      && systemctl enable grafana-server >/dev/null 2>&1 \
-      && systemctl daemon-reload \
-      && systemctl start grafana-server \
+      && firewall_port_manager "grafana-server"  -add \
       && touch $flag \
       &
       barra_progreso "Instalando grafana, por favor espere..."
@@ -102,7 +100,7 @@ menu_principal(){
     if [ $? -eq 0 ]; then
       instalar_nodejs \
       && npm install -g --unsafe-perm node-red >/dev/null 2>$log\
-      && firewall_port_manager -a 1880/tcp \
+      && firewall_port_manager "node-red" -add \
       && mkdir -p $HOME/.node-red \
       && cp -r configs/node-red/* $HOME/.node-red/ \
       && cd $HOME/.node-red \
@@ -118,8 +116,9 @@ menu_principal(){
   instalar_mariadb(){
     (validar -s mariadb.service)
     if [ $? -eq 0 ]; then
-      dnf install -y MariaDB-server >/dev/null 2>$log \
-      && firewall_port_manager -a 3306/tcp \
+      (curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash >/dev/null 2>&1) \
+      && dnf install -y MariaDB-server >/dev/null 2>$log \
+      && firewall_port_manager "mariadb" -add \
       && systemctl enable mariadb.service >/dev/null 2>&1 \
       && systemctl start mariadb.service \
       && mariadb < configs/mariadb/user.sql >/dev/null 2>$log \
@@ -135,8 +134,6 @@ menu_principal(){
     (validar -s nginx)
     if [ $? -eq 0 ]; then
       dnf install nginx -y >/dev/null 2>$log \
-      && systemctl enable nginx >/dev/null 2>&1 \
-      && systemctl start nginx >/dev/null 2>$log \
       && touch $flag \
       &
       barra_progreso "Instalando nginx, por favor espere..."
@@ -149,7 +146,6 @@ menu_principal(){
     if [ $? -eq 0 ]; then
       dnf install phpmyadmin -y >/dev/null 2>$log \
       && cp configs/phpmyadmin/phpmyadmin.conf /etc/nginx/conf.d/ >/dev/null 2>&1 \
-      && systemctl restart nginx >/dev/null 2>$log \
       && sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config >/dev/null 2>$log \
       && setenforce 0 \
       && touch $flag \
@@ -169,13 +165,14 @@ menu_principal(){
 # DESINSTALACION PSA
 ##########################################################################################
   desinstalacion_psa(){
-    rm -fr /usr/bin/psaii
+    rm -fr /usr/bin/psaii.sh
+    rm -fr /usr/bin/psa
 
     #desinstalar_grafana
-    #desinstalar_node_red
     #desinstalar_mariadb
+    #desinstalar_node_red
     desinstalar_phpmyadmin
-    #desinstalar_nginx
+    desinstalar_nginx
     proceso_finalizado "Desinstalacion de servidores completada"
   }
 
@@ -184,10 +181,10 @@ menu_principal(){
     (validar -s grafana-server)
     if [ $? -eq 1 ]; then
       dnf remove grafana-enterprise -y >/dev/null 2>&1 \
+      && systemctl daemon-reload \
       && rm -fr /etc/grafana /var/lib/grafana \
       && rm -fr /etc/yum.repos.d/grafana.repo \
-      && firewall_port_manager -r 3000/tcp \
-      && systemctl daemon-reload \
+      && firewall_port_manager "grafana-server" -rm \
       && touch $flag \
       &
       barra_progreso "Desinstalando grafana, por favor espere..."
@@ -195,6 +192,20 @@ menu_principal(){
     fi
   }
 
+  desinstalar_mariadb(){
+    (validar -s mariadb)
+    if [ $? -eq 1 ]; then
+      systemctl stop mariadb.service >/dev/null 2>&1
+      dnf remove -y mariadb >/dev/null 2>&1 \
+      && rm -fr /etc/yum.repos.d/mariadb.* \
+      && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql $HOME/.mariadb_history \
+      && firewall_port_manager "mariadb" -rm \
+      && touch $flag \
+      &
+      barra_progreso "desinstalando MariaDB, por favor espere..."
+      #proceso_finalizado "Desinstalacion de mysql completada"
+    fi
+  }
 
   desinstalar_node_red(){
     #Sub_funciones==========================
@@ -229,7 +240,7 @@ menu_principal(){
     (validar -b node-red)
     if [ $? -eq 1 ]; then
       npm uninstall -g node-red >/dev/null 2>&1 \
-      && firewall_port_manager -r 1880/tcp \
+      && firewall_port_manager "node-red" -rm \
       && rm -fr $HOME/.node* /usr/bin/serverdata\
       && desinstalar_nodejs \
       && touch $flag \
@@ -239,17 +250,17 @@ menu_principal(){
     fi
   }
 
-  desinstalar_mariadb(){
-    (validar -s mariadb)
+  desinstalar_phpmyadmin(){
+    (validar -d /usr/share/phpMyAdmin)
     if [ $? -eq 1 ]; then
-      systemctl stop mariadb.service >/dev/null 2>&1  \
-      ;  dnf remove -y mariadb >/dev/null 2>&1        \
-      && rm -fr /etc/my.cnf /etc/mysql /var/lib/mysql $HOME/.mariadb_history \
-      && firewall_port_manager -r 3306/tcp \
+      dnf remove phpmyadmin -y >/dev/null 2>$log \
+      && rm -fr /etc/nginx/conf.d/phpmyadmin.conf  /var/lib/phpMyAdmin \
+      && sed -i 's/SELINUX=permissive/SELINUX=enforcing/' /etc/selinux/config >/dev/null 2>$log \
+      && setenforce 1 \
       && touch $flag \
       &
-      barra_progreso "desinstalando MariaDB, por favor espere..."
-      #proceso_finalizado "Desinstalacion de mysql completada"
+      barra_progreso "desinstalando phpMyAdmin, por favor espere..."
+      #proceso_finalizado "Desinstalacion de phpMyAdmin completada"
     fi
   }
 
@@ -263,20 +274,6 @@ menu_principal(){
       &
       barra_progreso "desinstalando nginx, por favor espere..."
       #proceso_finalizado "Desinstalacion de nginx completada"
-    fi
-  }
-
-  desinstalar_phpmyadmin(){
-    (validar -d /usr/share/phpMyAdmin)
-    if [ $? -eq 1 ]; then
-      dnf remove phpmyadmin -y >/dev/null 2>$log \
-      && rm -fr /etc/nginx/conf.d/phpmyadmin.conf \
-      && sed -i 's/SELINUX=permissive/SELINUX=enforcing/' /etc/selinux/config >/dev/null 2>$log \
-      && setenforce 1 \
-      && touch $flag \
-      &
-      barra_progreso "desinstalando phpMyAdmin, por favor espere..."
-      #proceso_finalizado "Desinstalacion de phpMyAdmin completada"
     fi
   }
 #
@@ -293,8 +290,9 @@ menu_principal(){
 
   #=========================================================
   # VARIABLES GLOBALES =====================================
-  log="$HOME/installer_log"
+  log="$HOME/psaii_log"
   flag="$HOME/stop_progress_bar"
+  configs="$(pwd)/configs"
 
 
   #=========================================================
@@ -333,10 +331,12 @@ menu_principal(){
   #=========================================================
   # FIREWALL ADD/REMOVE PORT ===============================
   firewall_port_manager(){
-    case $1 in
-      "-a") firewall-cmd --add-port=$2 --permanent >/dev/null 2>&1 ;;
+    puerto=$(grep $1 $configs/ports | awk -F: '{print $2}')
 
-      "-r") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>&1 ;;
+    case $2 in
+      "-add") firewall-cmd --add-port=$puerto --permanent ;;
+
+      "-rm") firewall-cmd --remove-port=$puerto --permanent;;
     esac
 
     firewall-cmd --reload >/dev/null 2>&1
