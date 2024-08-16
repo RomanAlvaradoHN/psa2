@@ -163,7 +163,7 @@ menu_principal(){
           echo 100
           break;
         fi
-        sleep 10
+        sleep 1
       done
       sleep 3
     } | whiptail --gauge "${1}" 6 80 0
