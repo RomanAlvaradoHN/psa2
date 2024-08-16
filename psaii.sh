@@ -43,9 +43,9 @@ menu_principal(){
     rm -fr /usr/bin/psaii.sh && ln -s "$(pwd)/psaii.sh" /usr/bin
     rm -fr /usr/bin/psa && ln -s "$(pwd)/configs/psa" /usr/bin
 
-    #instalar_grafana
-    #instalar_mariadb
-    #instalar_node_red
+    instalar_grafana
+    instalar_mariadb
+    instalar_node_red
     instalar_nginx
     instalar_phpmyadmin
     proceso_finalizado "Instalacion de servidores completada"
@@ -168,9 +168,9 @@ menu_principal(){
     rm -fr /usr/bin/psaii.sh
     rm -fr /usr/bin/psa
 
-    #desinstalar_grafana
-    #desinstalar_mariadb
-    #desinstalar_node_red
+    desinstalar_grafana
+    desinstalar_mariadb
+    desinstalar_node_red
     desinstalar_phpmyadmin
     desinstalar_nginx
     proceso_finalizado "Desinstalacion de servidores completada"
@@ -251,6 +251,7 @@ menu_principal(){
   }
 
   desinstalar_phpmyadmin(){
+
     (validar -d /usr/share/phpMyAdmin)
     if [ $? -eq 1 ]; then
       dnf remove phpmyadmin -y >/dev/null 2>$log \
