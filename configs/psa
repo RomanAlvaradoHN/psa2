@@ -144,17 +144,18 @@ menu_principal(){
 
   configurar_node_red(){
     file="$HOME/.node-red/settings.js"
-    actual=$(grep "uiPort:" $file | awk -F" " '{print $4}' | awk -F"," '{print $1}')
-    nuevo=$(whiptail --title "(( CONFIGURAR PUERTO NODE-RED ))" --inputbox "Ingrese puerto" 8 39 "$actual" 3>&1 1>&2 2>&3)
-    
-    if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
-      patronActual="uiPort: process.env.PORT || $actual,"
-      patronNuevo="uiPort: process.env.PORT || $nuevo,"
-      sed -i "s/$patronActual/$patronNuevo/" $file \
-      && firewall_port_manager -rm "$actual/tcp" \
-      && firewall_port_manager -add "$nuevo/tcp" \
-      && (killall node-red >/dev/null 2>&1) \
-      &
+    if [ -e $file ]; then
+      actual=$(grep "uiPort:" $file | awk -F" " '{print $4}' | awk -F"," '{print $1}')
+      nuevo=$(whiptail --title "(( CONFIGURAR PUERTO NODE-RED ))" --inputbox "Ingrese puerto" 8 39 "$actual" 3>&1 1>&2 2>&3) 
+      if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
+        patronActual="uiPort: process.env.PORT || $actual,"
+        patronNuevo="uiPort: process.env.PORT || $nuevo,"
+        sed -i "s/$patronActual/$patronNuevo/" $file \
+        && firewall_port_manager -rm "$actual/tcp" \
+        && firewall_port_manager -add "$nuevo/tcp" \
+        && (killall node-red >/dev/null 2>&1) \
+        &
+      fi
     fi
   }
 
