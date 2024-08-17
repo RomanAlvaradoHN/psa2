@@ -61,7 +61,7 @@ menu_principal(){
       && rpm --import $configs/grafana/gpg.key \
       && cp $configs/grafana/grafana.repo /etc/yum.repos.d/ \
       && dnf install -y grafana-enterprise >/dev/null 2>$log \
-      && firewall_port_manager "grafana-server"  -add \
+      && firewall_port_manager -add 3000/tcp \
       && touch $flag \
       &
       barra_progreso "Instalando grafana, por favor espere..."
@@ -105,6 +105,7 @@ menu_principal(){
       && cp -r configs/node-red/* $HOME/.node-red/ \
       && cd $HOME/.node-red \
       && npm install node-red-node-mysql >/dev/null 2>$log \
+      && firewall_port_manager --add 1880/tcp \
       && instalar_comando_serverdata \
       && touch $flag \
       &
@@ -118,7 +119,7 @@ menu_principal(){
     if [ $? -eq 0 ]; then
       (curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash >/dev/null 2>&1) \
       && dnf install -y MariaDB-server >/dev/null 2>$log \
-      && firewall_port_manager "mariadb" -add \
+      && firewall_port_manager -add 3306/tcp \
       && systemctl enable mariadb.service >/dev/null 2>&1 \
       && systemctl start mariadb.service \
       && mariadb < configs/mariadb/user.sql >/dev/null 2>$log \
