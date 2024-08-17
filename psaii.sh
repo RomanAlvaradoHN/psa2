@@ -332,12 +332,10 @@ menu_principal(){
   #=========================================================
   # FIREWALL ADD/REMOVE PORT ===============================
   firewall_port_manager(){
-    puerto=$(grep $1 $configs/ports | awk -F: '{print $2}')
+    case $1 in
+      "-add") firewall-cmd --add-port=$2 --permanent >/dev/null 2>$log ;;
 
-    case $2 in
-      "-add") firewall-cmd --add-port=$puerto --permanent ;;
-
-      "-rm") firewall-cmd --remove-port=$puerto --permanent;;
+      "-rm") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>$log ;;
     esac
 
     firewall-cmd --reload >/dev/null 2>&1

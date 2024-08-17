@@ -1,3 +1,0 @@
-grafana-server:3000/tcp
-node-red:1880/tcp
-mariadb:3306/tcp

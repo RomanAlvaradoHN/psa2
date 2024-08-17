@@ -118,21 +118,59 @@ menu_principal(){
     actual=$(hostname)
     nuevo=$(whiptail --title "(( CONFIGURAR HOSTNAME ))" --inputbox "Ingrese hostname" 8 39 "$actual" 3>&1 1>&2 2>&3)
 
-    if [ $? -eq 0 ]; then
-      hostnamectl hostname $nuevo
+    if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
+      hostnamectl set-hostname $nuevo
+      sed -i "s/$actual/$nuevo/g" /etc/hosts
     fi
   }
 
   configurar_mariadb(){
-    actual=$(grep mariadb $configs/ports | awk -F: '{print $2}')
+    actual=$(grep "port=" /etc/my.cnf | awk -F"=" '{print $2}')
+    if [ -z $actual ]; then
+      actual="3306"
+      echo "port=3306" >> /etc/my.cnf
+    fi
+    nuevo=$(whiptail --title "(( CONFIGURAR PUERTO MARIADB ))" --inputbox "Ingrese puerto" 8 39 "$actual" 3>&1 1>&2 2>&3)
+    
+    if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
+      sed -i "s/port=$actual/port=$nuevo/" /etc/my.cnf >/dev/null 2>$log \
+      && systemctl stop mariadb.service >/dev/null 2>$log  \
+      && firewall_port_manager -rm "$actual/tcp" \
+      && firewall_port_manager -add "$nuevo/tcp" \
+      &
+    fi
+
   }
 
   configurar_node_red(){
-    actual=$(grep node-red $configs/ports | awk -F: '{print $2}')
+    file="$HOME/.node-red/settings.js"
+    actual=$(grep "uiPort:" $file | awk -F" " '{print $4}' | awk -F"," '{print $1}')
+    nuevo=$(whiptail --title "(( CONFIGURAR PUERTO NODE-RED ))" --inputbox "Ingrese puerto" 8 39 "$actual" 3>&1 1>&2 2>&3)
+    
+    if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
+      patronActual="uiPort: process.env.PORT || $actual,"
+      patronNuevo="uiPort: process.env.PORT || $nuevo,"
+      sed -i "s/$patronActual/$patronNuevo/" $file \
+      && firewall_port_manager -rm "$actual/tcp" \
+      && firewall_port_manager -add "$nuevo/tcp" \
+      && (killall node-red >/dev/null 2>&1) \
+      &
+    fi
   }
 
   configurar_grafana(){
-    actual=$(grep grafana-server $configs/ports | awk -F: '{print $2}')
+    file="/etc/grafana/grafana.ini"
+    actual=$(grep "http_port =" $file | awk '{print $3}')
+    nuevo=$(whiptail --title "(( CONFIGURAR PUERTO GRAFANA ))" --inputbox "Ingrese puerto" 8 39 "$actual" 3>&1 1>&2 2>&3)
+    
+    if [ $? -eq 0 ] && [ "$actual" != "$nuevo" ] && [ -n $nuevo ]; then
+      sed -i "s/;http_port = /http_port = /" $file \
+      && sed -i "s/http_port = $actual/http_port = $nuevo/" $file \
+      && systemctl stop grafana-server >/dev/null 2>$log  \
+      && firewall_port_manager -rm "$actual/tcp" \
+      && firewall_port_manager -add "$nuevo/tcp" \
+      &
+    fi
   }
 #
 
@@ -189,12 +227,10 @@ menu_principal(){
   #=========================================================
   # FIREWALL ADD/REMOVE PORT ===============================
   firewall_port_manager(){
-    puerto=$(grep $1 $configs/ports | awk -F: '{print $2}')
+    case $1 in
+      "-add") firewall-cmd --add-port=$2 --permanent >/dev/null 2>$log ;;
 
-    case $2 in
-      "-add") firewall-cmd --add-port=$puerto --permanent ;;
-
-      "-rm") firewall-cmd --remove-port=$puerto --permanent;;
+      "-rm") firewall-cmd --remove-port=$2 --permanent >/dev/null 2>$log ;;
     esac
 
     firewall-cmd --reload >/dev/null 2>&1
